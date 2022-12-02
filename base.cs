@@ -31,7 +31,6 @@ namespace igra {
                 gameObject.Y == Y;
         }
     }
-
     class Game {
         static public int Exp;
         static public int Damage;
