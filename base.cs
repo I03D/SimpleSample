@@ -68,11 +68,11 @@ namespace igra {
             };
 
             FieldItems = new List<Item> {
-                new Item(9, 11, "Mushroom"),
+                /* new Item(9, 11, "Mushroom"),
                 new Item(3, 17, "Iron sword"),
                 new Item(8, 3 , "Shield"),
                 new Item(22, 5, "Arrow"),
-                new Item(9, 9 , "Arrow")
+                new Item(9, 9 , "Arrow") */
             };
 
             Weapon heroWeapon = new Weapon("targetWeapon", 1, 10);
@@ -199,6 +199,21 @@ namespace igra {
                                 Game.Enemies.Remove(i);
                                 B1.LifeTime = 0;
                                 draw = false;
+
+                                switch(Dice.Next(1, 7)) {
+                                    case 1:
+                                        FieldItems.Add( new Item(B1.X, B1.Y, "Shield") );
+                                        break;
+                                    case 2:
+                                        FieldItems.Add( new Item(B1.X, B1.Y, "Iron Sword") );
+                                        break;
+                                    case 3:
+                                        FieldItems.Add( new Item(B1.X, B1.Y, "Arrow") );
+                                        break;
+                                    case 4:
+                                        FieldItems.Add( new Item(B1.X, B1.Y, "Mushroom") );
+                                        break;
+                                }
                             }
                         }
 
