@@ -131,20 +131,11 @@ namespace igra {
             // Слишком долгий цикл, возможно стоит поменять:
             while(!Exit) {
                 Move++;
-                // Определяем, пора ли спавнить врага:
-                if (Move == MovesToSpawn - 10) {
-                    spawn = new Spawn( Dice.Next(Game.XOffset, Game.Width + Game.XOffset), Dice.Next(Game.YOffset, Game.Height + Game.YOffset) );
-                    Console.SetCursorPosition(spawn.X + 1, spawn.Y + 1);
-                    Console.Write('!');
-                } else if (Move == MovesToSpawn) {
-                    Console.SetCursorPosition(spawn.X + 1, spawn.Y + 1);
-                    Enemies.Add( new Enemy(spawn.X + 1, spawn.Y + 1) );
-                    Move = 0;
-                    Console.Write(' ');
-                }
-
                 // Отрисовываем предметы, лежащие на земле:
                 DrawItems();
+
+                // Ожидаем действие игрока.
+                DoAction(P1, B1, ReadActionKey() ); 
 
                 /* Проверяем каждый предмет. Если он на месте игрока,
                 то выводим информацию о предмете. Если сделать
@@ -159,11 +150,35 @@ namespace igra {
                 }
                 if (!itemMsg) { ClearMsg(); }
 
+                /* Определяем, пора ли спавнить врага. Обязательно
+                после хода врагов, чтобы не было рывков. */
+                if (Move == MovesToSpawn - 10) {
+                    spawn = new Spawn( Dice.Next(Game.XOffset, Game.Width + Game.XOffset), Dice.Next(Game.YOffset, Game.Height + Game.YOffset) );
+                    Console.SetCursorPosition(spawn.X + 1, spawn.Y + 1);
+                    Console.Write('!');
+                } else if (Move == MovesToSpawn) {
+                    Console.SetCursorPosition(spawn.X + 1, spawn.Y + 1);
+                    Enemies.Add( new Enemy(spawn.X, spawn.Y) );
+                    Move = 0;
+                    Console.Write(' ');
+                }
+
+                // Каждый враг выполняет какое-нибудь действие:
                 foreach (Enemy e in Enemies) {
                     EnemyAction(e, P1);
                 }
+
+                // Отрисовываем врагов:
                 DrawEnemies();
 
+                // Отладочная информация:
+
+                Console.SetCursorPosition(0, 20);
+                foreach (Enemy i in Game.Enemies.Reverse<Enemy>() ) {
+                    Console.WriteLine(i.X + ":" + i.Y + ";   ");
+                }
+
+                // Чересчур сложная проверка столкновений врагов и пуль
                 if (B1.LifeTime != 0) {
                     if ( (P1.X != B1.X) || (P1.Y != B1.Y) ) {
                         ClearTile(B1.X, B1.Y);
@@ -196,7 +211,6 @@ namespace igra {
 
                     }
                 }
-                DoAction(P1, B1, ReadActionKey() ); 
             }
         }
 
