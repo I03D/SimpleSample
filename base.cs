@@ -38,7 +38,7 @@ namespace igra {
     class Game {
         static public int Exp;
         static public int Damage;
-        static public int Health;
+        static public int Health = 123456789;
         static public int Level;
         static public int Move = 0;
         static public int MovesToSpawn = 30;
@@ -129,6 +129,7 @@ namespace igra {
                                     new Enemy() }; */
 
             DrawBorders();
+            DrawHealth();
             DrawPlayer(P1);
 
             // Слишком долгий цикл, возможно стоит поменять:
@@ -253,6 +254,13 @@ namespace igra {
                 Console.Write("-");
             }
             Console.Write("/");
+        }
+
+        public static void DrawHealth() {
+            Console.SetCursorPosition( Game.XOffset + (Game.Width / 2) - ( (int)Math.Log10(Health) + 1 ) / 2, Game.YOffset);
+            // if ( (int)Math.Log10(Health) + 1 == 3 ) {
+                Console.Write(Health);
+            // }
         }
 
         public static void DrawEnemies() {
