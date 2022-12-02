@@ -5,18 +5,24 @@ using System.Linq;
 
 namespace igra {
     class Start {
-        public static void Main() {
+        public static void Main(string[] args) {
             Console.Clear();
             Console.CursorVisible = false;
 
-            Game instance1 = new Game();
+            /* Для "маленьких" консолей можно запускать с аргументом
+               "little", чтобы установить ограничение генерации полем
+               18x10 (20x12 символов включая рамки): */
+            if (args.Length != 0 && args[0] == "little") {
+                Game instance1 = new Game(18, 10);
+            } else {
+                Game instance1 = new Game(10, 7, 10, 20);
+            }
         }
     }
 
 	class GameObject {
         public int X;
         public int Y;
-
         public void Move() {
         }
 
@@ -33,6 +39,10 @@ namespace igra {
         static public int Level;
         static public int Move = 0;
         static public int MovesToSpawn = 30;
+        static public int XOffset = 0;
+        static public int YOffset = 0;
+        static public int Height = 10;
+        static public int Width = 10;
         static public Spawn spawn;
         static public string Choose;
         static public List<Enemy> Enemies;
@@ -42,16 +52,19 @@ namespace igra {
 
         // public static Enemies;
 
-        public Game() {
+        public Game(int width, int height) {
+            Height = height;
+            Width = width;
+
             Player P1 = new Player(0, 0);
             Bullet B1 = new Bullet();
 
             Dice = new Random();
 
             Enemies = new List<Enemy> {
-                new Enemy(5,  5),
+                /* new Enemy(5,  5),
                 new Enemy(10, 5),
-                new Enemy(7,  10)
+                new Enemy(7,  10) */
             };
 
             FieldItems = new List<Item> {
@@ -64,6 +77,41 @@ namespace igra {
 
             Weapon heroWeapon = new Weapon("targetWeapon", 1, 10);
             Weapon droppedWeapon = new Weapon("dropped", 1);
+
+            Process();
+        }
+
+        public Game(int width, int height, int xOffset, int yOffset) {
+            Height = height;
+            Width = width;
+            XOffset = xOffset;
+            YOffset = yOffset;
+
+            Dice = new Random();
+
+            Enemies = new List<Enemy> {
+                /* new Enemy(5,  5),
+                new Enemy(10, 5),
+                new Enemy(7,  10) */
+            };
+
+            FieldItems = new List<Item> {
+                /* new Item(9, 11, "Mushroom"),
+                new Item(3, 17, "Iron sword"),
+                new Item(8, 3 , "Shield"),
+                new Item(22, 5, "Arrow"),
+                new Item(9, 9 , "Arrow") */
+            };
+
+            Weapon heroWeapon = new Weapon("targetWeapon", 1, 10);
+            Weapon droppedWeapon = new Weapon("dropped", 1);
+
+            Process();
+        }
+
+        public static void Process() {
+            Player P1 = new Player(0, 0);
+            Bullet B1 = new Bullet();
 
             /* while (true) {
                 Console.ReadLine();
@@ -80,11 +128,12 @@ namespace igra {
             DrawBorders();
             DrawPlayer(P1);
 
-            // Слишком долгий цикл, поменять:
+            // Слишком долгий цикл, возможно стоит поменять:
             while(!Exit) {
                 Move++;
+                // Определяем, пора ли спавнить врага:
                 if (Move == MovesToSpawn - 10) {
-                    spawn = new Spawn( Dice.Next(1, 40), Dice.Next(1, 20) );
+                    spawn = new Spawn( Dice.Next(Game.XOffset, Game.Width + Game.XOffset), Dice.Next(Game.YOffset, Game.Height + Game.YOffset) );
                     Console.SetCursorPosition(spawn.X + 1, spawn.Y + 1);
                     Console.Write('!');
                 } else if (Move == MovesToSpawn) {
@@ -93,7 +142,14 @@ namespace igra {
                     Move = 0;
                     Console.Write(' ');
                 }
+
+                // Отрисовываем предметы, лежащие на земле:
                 DrawItems();
+
+                /* Проверяем каждый предмет. Если он на месте игрока,
+                то выводим информацию о предмете. Если сделать
+                сетку, содержащую статические предметы, можно будет
+                избежать перебирания каждой вещи в списке. */
                 bool itemMsg = false;
                 foreach (Item i in Game.FieldItems.Reverse<Item>()) {
                     if ( (P1.X == i.X) && (P1.Y == i.Y) ) {
@@ -101,7 +157,6 @@ namespace igra {
                         itemMsg = true;
                     }
                 }
-
                 if (!itemMsg) { ClearMsg(); }
 
                 foreach (Enemy e in Enemies) {
@@ -146,13 +201,26 @@ namespace igra {
         }
 
         public static void DrawBorders() {
-            Console.WriteLine("/--------------------------------------\\");
+            Console.SetCursorPosition(Game.XOffset, Game.YOffset);
+            Console.Write("/");
+            for (int i = 1; i < Game.Width + 1; i++) {
+                Console.Write("-");
+            }
+            Console.Write("\\");
 
-            for (int i = 0; i < 20; i++) {
-                Console.WriteLine("|                                      |");
+            for (int i = 0; i < Game.Height; i++) {
+                Console.SetCursorPosition(Game.XOffset, Game.YOffset + i + 1);
+                Console.Write("|");
+                Console.SetCursorPosition(Game.XOffset + Game.Width + 1, Game.YOffset + 1 + i);
+                Console.Write("|");
             }
 
-            Console.WriteLine("\\--------------------------------------/");
+            Console.SetCursorPosition(Game.XOffset, Game.YOffset + 1 + Game.Height);
+            Console.Write("\\");
+            for (int i = 0; i < Game.Width; i++) {
+                Console.Write("-");
+            }
+            Console.Write("/");
         }
 
         public static void DrawEnemies() {
@@ -186,12 +254,12 @@ namespace igra {
         }
 
         public static void Msg(string msg) {
-            Console.SetCursorPosition(0, 23);
+            Console.SetCursorPosition(Game.XOffset, Game.Height + Game.YOffset + 2);
             Console.WriteLine(msg);
         }
 
         public static void ClearMsg() {
-            Console.SetCursorPosition(0, 23);
+            Console.SetCursorPosition(0, Game.Height + Game.YOffset + 2);
             Console.WriteLine("                                        ");
         }
 
@@ -260,7 +328,7 @@ namespace igra {
         }
 
         public static void EnemyAction(Enemy e, GameObject target) {
-            // Кубик подкрученный, враги чаще идут в сторону игрока.
+            // Кубик подкрученный, враги чаще идут в сторону игрока:
             // грани 3, 4, 5, 6 - обычные стороны; 1, 2 - подкрутка.
             switch (Dice.Next(1, 7)) {
                 case 1:
@@ -336,25 +404,25 @@ namespace igra {
         }
 
         public void Down() {
-            if (Y < 19) {
+            if (Y < Game.Height + Game.YOffset - 1) {
                 Y++;
             }
         }
 
         public void Up() {
-            if (Y > 0) {
+            if (Y > Game.YOffset) {
                 Y--;
             }
         }
 
         public void Left() {
-            if (X > 0) {
+            if (X > Game.XOffset) {
                 X--;
             }
         }
 
         public void Right() {
-            if (X < 37) {
+            if (X < Game.Width + Game.XOffset - 1) {
                 X++;
             }
         }
@@ -375,28 +443,28 @@ namespace igra {
         }
 
         public void Down() {
-            if (Y < 19) {
+            if (Y < Game.Height + Game.YOffset - 1) {
                 Y++;
                 Facing = "Down";
             }
         }
 
         public void Up() {
-            if (Y > 0) {
+            if (Y > Game.YOffset) {
                 Y--;
                 Facing = "Up";
             }
         }
 
         public void Left() {
-            if (X > 0) {
+            if (X > Game.XOffset) {
                 X--;
                 Facing = "Left";
             }
         }
 
         public void Right() {
-            if (X < 37) {
+            if (X < Game.Width + Game.XOffset - 1) {
                 X++;
                 Facing = "Right";
             }
