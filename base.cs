@@ -15,7 +15,7 @@ namespace igra {
             if (args.Length != 0 && args[0] == "little") {
                 Game instance1 = new Game(18, 10);
             } else {
-                Game instance1 = new Game(10, 7, 10, 20);
+                Game instance1 = new Game(30, 20, 4, 4);
             }
         }
     }
@@ -56,7 +56,7 @@ namespace igra {
             Height = height;
             Width = width;
 
-            Player P1 = new Player(0, 0);
+            Player P1 = new Player(4, 4);
             Bullet B1 = new Bullet();
 
             Dice = new Random();
@@ -110,7 +110,7 @@ namespace igra {
         }
 
         public static void Process() {
-            Player P1 = new Player(0, 0);
+            Player P1 = new Player(4, 4);
             Bullet B1 = new Bullet();
 
             /* while (true) {
