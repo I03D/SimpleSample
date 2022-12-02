@@ -1,3 +1,7 @@
+// Максименко Данил
+// Помазкин Александр
+// И-03
+
 using System;
 using System.Collections.Generic;
 using System.Windows.Input;
@@ -356,9 +360,10 @@ namespace igra {
         }
 
         public static void EnemyAction(Enemy e, GameObject target) {
-            // Кубик подкрученный, враги чаще идут в сторону игрока:
-            // грани 3, 4, 5, 6 - обычные стороны; 1, 2 - подкрутка.
-            switch (Dice.Next(1, 7)) {
+            /* Кубик подкрученный, враги чаще идут в сторону игрока:
+            грани 3, 4, 5, 6 - обычные стороны; 1, 2 - подкрутка.
+            7, 8 - сон */
+            switch (Dice.Next(1, 9)) {
                 case 1:
                     if (target.X < e.X) {
                         ClearTile(e.X, e.Y);
