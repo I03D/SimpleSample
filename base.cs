@@ -19,7 +19,7 @@ namespace igra {
             if (args.Length != 0 && args[0] == "little") {
                 Game instance1 = new Game(18, 10);
             } else {
-                Game instance1 = new Game(30, 20, 4, 4);
+                Game instance1 = new Game(40, 15, 5, 5);
             }
         }
     }
@@ -38,7 +38,7 @@ namespace igra {
     class Game {
         static public int Exp;
         static public int Damage;
-        static public int Health = 123456789;
+        static public int Health = 100;
         static public int Level;
         static public int Move = 0;
         static public int MovesToSpawn = 30;
@@ -58,9 +58,6 @@ namespace igra {
         public Game(int width, int height) {
             Height = height;
             Width = width;
-
-            Player P1 = new Player(4, 4);
-            Bullet B1 = new Bullet();
 
             Dice = new Random();
 
@@ -113,7 +110,7 @@ namespace igra {
         }
 
         public static void Process() {
-            Player P1 = new Player(4, 4);
+            Player P1 = new Player(0, 0);
             Bullet B1 = new Bullet();
 
             /* while (true) {
@@ -157,43 +154,36 @@ namespace igra {
                 /* Определяем, пора ли спавнить врага. Обязательно
                 после хода врагов, чтобы не было рывков. */
                 if (Move == MovesToSpawn - 10) {
-                    spawn = new Spawn( Dice.Next(Game.XOffset, Game.Width + Game.XOffset), Dice.Next(Game.YOffset, Game.Height + Game.YOffset) );
-                    Console.SetCursorPosition(spawn.X + 1, spawn.Y + 1);
+                    spawn = new Spawn( Dice.Next(0, Game.Width), Dice.Next(0, Game.Height) );
+                    Console.SetCursorPosition(spawn.X + 1 + XOffset, spawn.Y + 1 + YOffset);
                     Console.Write('!');
                 } else if (Move == MovesToSpawn) {
-                    Console.SetCursorPosition(spawn.X + 1, spawn.Y + 1);
+                    Console.SetCursorPosition(spawn.X + 1 + XOffset, spawn.Y + 1 + YOffset);
                     Enemies.Add( new Enemy(spawn.X, spawn.Y) );
                     Move = 0;
                     Console.Write(' ');
                 }
 
-                // Каждый враг выполняет какое-нибудь действие:
-                foreach (Enemy e in Enemies) {
-                    EnemyAction(e, P1);
-                }
-
-                // Отрисовываем врагов:
-                DrawEnemies();
-
-                // Отладочная информация:
+                /* // Отладочная информация:
 
                 Console.SetCursorPosition(0, 20);
                 foreach (Enemy i in Game.Enemies.Reverse<Enemy>() ) {
                     Console.WriteLine(i.X + ":" + i.Y + ";   ");
-                }
+                } */
 
                 // Чересчур сложная проверка столкновений врагов и пуль
                 if (B1.LifeTime != 0) {
-                    if ( (P1.X != B1.X) || (P1.Y != B1.Y) ) {
+                    if ( !( (P1.X == B1.X) && (P1.Y == B1.Y) ) ) {
                         ClearTile(B1.X, B1.Y);
                     }
                     foreach (Item i in Game.FieldItems.Reverse<Item>()) {
                         if ( (B1.X == i.X) && (B1.Y == i.Y) ) {
-                            Console.SetCursorPosition(i.X + 1, i.Y + 1);
+                            Console.SetCursorPosition(i.X + 1 + XOffset, i.Y + 1 + YOffset);
                             Console.Write("?");
                         }
                     }
                     B1.Step();
+                    Msg((string)(B1.X + ":" + B1.Y));
                     if (B1.LifeTime != 0) {
                         bool draw = true;
                         foreach (Enemy i in Game.Enemies.Reverse<Enemy>() ) {
@@ -230,34 +220,66 @@ namespace igra {
 
                     }
                 }
+
+                // Каждый враг выполняет какое-нибудь действие:
+                foreach (Enemy e in Game.Enemies.Reverse<Enemy>()) {
+                    EnemyAction(e, P1);
+                    if (B1.LifeTime != 0) {
+                        if ( (B1.X == e.X) && (B1.Y == e.Y) ) {
+                            Msg("Killed!");
+                            ClearTile(e.X, e.Y);
+                            Game.Enemies.Remove(e);
+                            B1.LifeTime = 0;
+
+                            switch(Dice.Next(1, 7)) {
+                                case 1:
+                                    FieldItems.Add( new Item(B1.X, B1.Y, "Shield") );
+                                    break;
+                                case 2:
+                                    FieldItems.Add( new Item(B1.X, B1.Y, "Iron Sword") );
+                                    break;
+                                case 3:
+                                    FieldItems.Add( new Item(B1.X, B1.Y, "Arrow") );
+                                    break;
+                                case 4:
+                                    FieldItems.Add( new Item(B1.X, B1.Y, "Mushroom") );
+                                    break;
+                            }
+                        }
+                    }
+                }
+
+                // Отрисовываем врагов:
+                DrawEnemies();
+
             }
         }
 
         public static void DrawBorders() {
             Console.SetCursorPosition(Game.XOffset, Game.YOffset);
-            Console.Write("/");
+            Console.Write("▒");
             for (int i = 1; i < Game.Width + 1; i++) {
-                Console.Write("-");
+                Console.Write("▒");
             }
-            Console.Write("\\");
+            Console.Write("▒");
 
             for (int i = 0; i < Game.Height; i++) {
                 Console.SetCursorPosition(Game.XOffset, Game.YOffset + i + 1);
-                Console.Write("|");
+                Console.Write("▒");
                 Console.SetCursorPosition(Game.XOffset + Game.Width + 1, Game.YOffset + 1 + i);
-                Console.Write("|");
+                Console.Write("▒");
             }
 
             Console.SetCursorPosition(Game.XOffset, Game.YOffset + 1 + Game.Height);
-            Console.Write("\\");
+            Console.Write("▒");
             for (int i = 0; i < Game.Width; i++) {
-                Console.Write("-");
+                Console.Write("▒");
             }
-            Console.Write("/");
+            Console.Write("▒");
         }
 
         public static void DrawHealth() {
-            Console.SetCursorPosition( Game.XOffset + (Game.Width / 2) - ( (int)Math.Log10(Health) + 1 ) / 2, Game.YOffset);
+            Console.SetCursorPosition( Game.XOffset + (Game.Width / 2) - ( (int)Math.Log10(Health) + 1 ) / 2 + 1, Game.YOffset);
             // if ( (int)Math.Log10(Health) + 1 == 3 ) {
                 Console.Write(Health);
             // }
@@ -265,31 +287,32 @@ namespace igra {
 
         public static void DrawEnemies() {
             foreach (Enemy i in Game.Enemies) {
-                Console.SetCursorPosition(i.X + 1, i.Y + 1);
+                Console.SetCursorPosition(i.X + 1 + XOffset, i.Y + 1 + YOffset);
                 Console.Write("#");
             }
         }
 
         public static void DrawItems() {
             foreach (Item i in Game.FieldItems) {
-                Console.SetCursorPosition(i.X + 1, i.Y + 1);
+                Console.SetCursorPosition(i.X + 1 + XOffset, i.Y + 1 + YOffset);
                 Console.Write("?");
             }
         }
 
         public static void DrawPlayer(Player p) {
-            Console.SetCursorPosition(p.X + 1, p.Y + 1);
+            Console.SetCursorPosition(p.X + 1 + XOffset, p.Y + 1 + YOffset);
             Console.Write("C");
         }
 
         public static void DrawBullet(Bullet b) {
-            // Сделать ограничение, чтобы не рисовать за холстом.
-            Console.SetCursorPosition(b.X + 1, b.Y + 1);
+            /* Проверка координат не требуется, потому что пули не могут
+            вылететь за пределы холста. */
+            Console.SetCursorPosition(b.X + 1 + XOffset, b.Y + 1 + YOffset);
             Console.Write('+'); // b.LifeTime);
         }
 
         public static void ClearTile(int x, int y) {
-            Console.SetCursorPosition(x + 1, y + 1);
+            Console.SetCursorPosition(x + 1 + XOffset, y + 1 + YOffset);
             Console.Write(" ");
         }
 
@@ -329,6 +352,10 @@ namespace igra {
                     return "Shoot";
                 case ' ':
                     return "Wait";
+                case 'e':
+                    return "ForwardItem";
+                case 'q':
+                    return "BackwardItem";
             }
             return "attack";
         }
@@ -361,6 +388,10 @@ namespace igra {
                 case "Wait":
                     // Пропускаем ход (ждём).
                     break;
+                case "ForwardItem":
+                    break;
+                case "BackwardItem":
+                    break;
                 default:
                     Game.Exit = true;
                     break;
@@ -368,9 +399,9 @@ namespace igra {
         }
 
         public static void EnemyAction(Enemy e, GameObject target) {
-            /* Кубик подкрученный, враги чаще идут в сторону игрока:
+            /* Кубик подкрученный, враги идут чаще в сторону игрока:
             грани 3, 4, 5, 6 - обычные стороны; 1, 2 - подкрутка.
-            7, 8 - сон */
+            7, 8 - ожидание */
             switch (Dice.Next(1, 9)) {
                 case 1:
                     if (target.X < e.X) {
@@ -445,25 +476,25 @@ namespace igra {
         }
 
         public void Down() {
-            if (Y < Game.Height + Game.YOffset - 1) {
+            if (Y < Game.Height - 1) {
                 Y++;
             }
         }
 
         public void Up() {
-            if (Y > Game.YOffset) {
+            if (Y > 0) {
                 Y--;
             }
         }
 
         public void Left() {
-            if (X > Game.XOffset) {
+            if (X > 0) {
                 X--;
             }
         }
 
         public void Right() {
-            if (X < Game.Width + Game.XOffset - 1) {
+            if (X < Game.Width - 1) {
                 X++;
             }
         }
@@ -471,6 +502,8 @@ namespace igra {
 
     class Player : GameObject {
         public string Facing = "Right";
+        public Item Arm = new Item("Magic wand");
+        public Bag Inventory = new Bag(10);
 
         public Player(int x, int y) {
             X=x;
@@ -478,34 +511,35 @@ namespace igra {
         }
 
         public void attack() {
+            // Не используется по причине более удобного метода атаки.
         }
         
         private void AddExp() {
         }
 
         public void Down() {
-            if (Y < Game.Height + Game.YOffset - 1) {
+            if (Y < Game.Height - 1) {
                 Y++;
                 Facing = "Down";
             }
         }
 
         public void Up() {
-            if (Y > Game.YOffset) {
+            if (Y > 0) {
                 Y--;
                 Facing = "Up";
             }
         }
 
         public void Left() {
-            if (X > Game.XOffset) {
+            if (X > 0) {
                 X--;
                 Facing = "Left";
             }
         }
 
         public void Right() {
-            if (X < Game.Width + Game.XOffset - 1) {
+            if (X < Game.Width - 1) {
                 X++;
                 Facing = "Right";
             }
@@ -553,16 +587,36 @@ namespace igra {
 
                 switch (Facing) {
                     case "Down":
-                        Y++;
+                        if (Y < Game.Height - 1) {
+                            Y++;
+                        } else {
+                            Facing = "Up";
+                            Y--;
+                        }
                         break;
                     case "Up":
-                        Y--;
+                        if (Y > 1) {
+                            Y--;
+                        } else {
+                            Facing = "Down";
+                            Y--;
+                        }
                         break;
                     case "Left":
-                        X--;
+                        if (X > 0) {
+                            X--;
+                        } else {
+                            Facing = "Right";
+                            X++;
+                        }
                         break;
                     case "Right":
-                        X++;
+                        if (X < Game.Width - 1) {
+                            X++;
+                        } else {
+                            Facing = "Left";
+                            X--;
+                        }
                         break;
                 }
             }

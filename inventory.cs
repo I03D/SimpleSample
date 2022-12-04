@@ -18,9 +18,9 @@ public class InventoryGame {
 }
 
 public class Bag {
-    public static int Capacity = 1;
+    public int Capacity = 1;
 
-    Bag(int capacity) {
+    public Bag(int capacity) {
         Capacity = capacity;
     }
 
